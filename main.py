@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 from typing import Optional
+from blog import Blog
 app = FastAPI()
 
+@app.post('/blog/create/')
+def create_blog(blog : Blog):
+    return blog
 
 @app.get("/blog")
 def blogs(limit: int, published : bool, sort : Optional[int] = 1): # query parameters
