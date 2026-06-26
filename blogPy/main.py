@@ -1,10 +1,10 @@
 from fastapi import FastAPI, status, Response, HTTPException
-from typing import Optional
+from typing import Optional, List
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
-from .models import Base, Blog as BlogM
+from .models import Base, Blog as BlogM, User
 from .database import engine, SessionLocal
-from .schemas import Blog
+from .schemas import Blog, BlogResponse, UserRequest, UserResponse
 app = FastAPI()
 
 Base.metadata.create_all(engine)
@@ -58,12 +58,12 @@ def update_blog(blog : Blog, id:int, db:Session = Depends(get_db)):
 
 
 
-@app.get("/blog")
-def blogs(limit: int, published : bool, sort : Optional[int] = 1, db : Session = Depends(get_db)): # query parameters
+@app.get("/blog", response_model = List[BlogResponse])
+def blogs(limit: int, published : bool, sort : Optional[int] = 1,  db : Session = Depends(get_db), ): # query parameters
     blogs = db.query(BlogM).all()
     return blogs
 
-@app.get("/blog/{id}")
+@app.get("/blog/{id}",response_model=BlogResponse)
 def get_blog_by_id(id: int, response: Response, db : Session = Depends(get_db), status_code=200):
     # calling the db for the specified blogPy id
     blog = db.query(BlogM).filter(BlogM.id==id).first()
@@ -82,6 +82,19 @@ def author():
             "last_name" : 'Karfa'
         }
     }
+
+@app.post('/user/create', response_model=UserResponse)
+def create_user(userReq: UserRequest, db : Session = Depends(get_db)):
+    user = User(
+        email=userReq.email,
+        name=userReq.name,
+        password=userReq.password
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
 
 # changing the default port
 #
