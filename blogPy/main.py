@@ -1,5 +1,4 @@
-import uvicorn
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, status, Response
 from typing import Optional
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
@@ -17,12 +16,12 @@ def get_db():
         yield db
     finally:
         db.close()
-@app.post('/blog/create/')
+@app.post('/blog/create/', status_code=status.HTTP_201_CREATED)
 def create_blog(blog : Blog, db : Session = Depends(get_db)):
     new_blog = BlogM(
         title=blog.title,
         author= blog.author,
-        body= blog.author,
+        body= blog.body,
         published= blog.published
     )
     db.add(new_blog)
@@ -31,27 +30,20 @@ def create_blog(blog : Blog, db : Session = Depends(get_db)):
     return new_blog
 
 @app.get("/blog")
-def blogs(limit: int, published : bool, sort : Optional[int] = 1): # query parameters
-    # Get 10 published Blogs
-
-    return {
-        'data': {
-            'limit' : limit,
-            'published' : published
-        }
-    }
+def blogs(limit: int, published : bool, sort : Optional[int] = 1, db : Session = Depends(get_db)): # query parameters
+    blogs = db.query(BlogM).all()
+    return blogs
 
 @app.get("/blog/{id}")
-def get_blog_by_id(id: int):
+def get_blog_by_id(id: int, response: Response, db : Session = Depends(get_db), status_code=200):
     # calling the db for the specified blogPy id
-    return {
-        "data" : {
-            "blogPy" : {
-                "id" : id,
-                "msg" : "Heyy hello"
-            }
+    blog = db.query(BlogM).filter(BlogM.id==id).first()
+    if not blog:
+        response.status_code=status.HTTP_404_NOT_FOUND
+        return {
+            'detail' : f"Blog with {id} Not Found!"
         }
-    }
+    return blog
 
 @app.get("/author")
 def author():
