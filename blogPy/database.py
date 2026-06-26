@@ -1,16 +1,19 @@
-from fastapi import FastAPI
+from urllib.parse import quote_plus
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
-CONNECTION_URL = "sqlite.///./blogdb.db"
-CONNECTION_ARGS = {
-    "check_same_thread" : False
-}
+load_dotenv()
+
+DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD"))
+CONNECTION_URL = f"mysql+pymysql://riku:{DB_PASSWORD}@localhost:3306/blogdb"
+
 
 engine = create_engine(
     CONNECTION_URL,
-    connect_args=CONNECTION_ARGS
 )
 
 SessionLocal = sessionmaker(

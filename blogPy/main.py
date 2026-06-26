@@ -1,9 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
 from typing import Optional
-from blog import Blog
+from .models import Base
+from .database import engine
+from .schemas import Blog
 app = FastAPI()
 
+Base.metadata.create_all(engine)
 @app.post('/blog/create/')
 def create_blog(blog : Blog):
     return blog
