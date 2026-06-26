@@ -21,10 +21,10 @@ def blogs(limit: int, published : bool, sort : Optional[int] = 1): # query param
 
 @app.get("/blog/{id}")
 def get_blog_by_id(id: int):
-    # calling the db for the specified blog id
+    # calling the db for the specified blogPy id
     return {
         "data" : {
-            "blog" : {
+            "blogPy" : {
                 "id" : id,
                 "msg" : "Heyy hello"
             }
