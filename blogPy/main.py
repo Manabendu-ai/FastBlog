@@ -1,13 +1,22 @@
+from enum import auto
+
 from fastapi import FastAPI, status, Response, HTTPException
 from typing import Optional, List
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.util import deprecated
+
 from .models import Base, Blog as BlogM, User
 from .database import engine, SessionLocal
 from .schemas import Blog, BlogResponse, UserRequest, UserResponse
+from passlib.context import CryptContext
 app = FastAPI()
 
 Base.metadata.create_all(engine)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hashPassword(password):
+    return pwd_context.hash(password)
 
 def get_db():
     db = SessionLocal()
@@ -88,7 +97,7 @@ def create_user(userReq: UserRequest, db : Session = Depends(get_db)):
     user = User(
         email=userReq.email,
         name=userReq.name,
-        password=userReq.password
+        password=hashPassword(userReq.password)
     )
     db.add(user)
     db.commit()
