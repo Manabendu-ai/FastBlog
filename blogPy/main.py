@@ -1,11 +1,7 @@
-from enum import auto
-
 from fastapi import FastAPI, status, Response, HTTPException
 from typing import Optional, List
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
-from sqlalchemy.util import deprecated
-
 from .models import Base, Blog as BlogM, User
 from .database import engine, SessionLocal
 from .schemas import Blog, BlogResponse, UserRequest, UserResponse
@@ -24,7 +20,7 @@ def get_db():
         yield db
     finally:
         db.close()
-@app.post('/blog/create/', status_code=status.HTTP_201_CREATED)
+@app.post('/blog/create/', status_code=status.HTTP_201_CREATED, tags=["blogs"])
 def create_blog(blog : Blog, db : Session = Depends(get_db)):
     new_blog = BlogM(
         title=blog.title,
@@ -37,7 +33,7 @@ def create_blog(blog : Blog, db : Session = Depends(get_db)):
     db.refresh(new_blog)
     return new_blog
 
-@app.delete('/blog/{id}', status_code=status.HTTP_204_NO_CONTENT)
+@app.delete('/blog/{id}', status_code=status.HTTP_204_NO_CONTENT, tags=["blogs"])
 def delete_blog(id:int, db:Session = Depends(get_db)):
     blogs = db.query(BlogM).filter(BlogM.id == id)
     if not blogs.first():
@@ -51,7 +47,7 @@ def delete_blog(id:int, db:Session = Depends(get_db)):
         'detail' : f'Blog id: {id} Deleted'
     }
 
-@app.put('/blog/{id}', status_code=status.HTTP_202_ACCEPTED)
+@app.put('/blog/{id}', status_code=status.HTTP_202_ACCEPTED, tags=["blogs"])
 def update_blog(blog : Blog, id:int, db:Session = Depends(get_db)):
     blogs = db.query(BlogM).filter(BlogM.id == id)
     if not blogs.first():
@@ -67,12 +63,12 @@ def update_blog(blog : Blog, id:int, db:Session = Depends(get_db)):
 
 
 
-@app.get("/blog", response_model = List[BlogResponse])
+@app.get("/blog", response_model = List[BlogResponse], tags=["blogs"])
 def blogs(limit: int, published : bool, sort : Optional[int] = 1,  db : Session = Depends(get_db), ): # query parameters
     blogs = db.query(BlogM).all()
     return blogs
 
-@app.get("/blog/{id}",response_model=BlogResponse)
+@app.get("/blog/{id}",response_model=BlogResponse, tags=["blogs"])
 def get_blog_by_id(id: int, response: Response, db : Session = Depends(get_db), status_code=200):
     # calling the db for the specified blogPy id
     blog = db.query(BlogM).filter(BlogM.id==id).first()
@@ -83,16 +79,8 @@ def get_blog_by_id(id: int, response: Response, db : Session = Depends(get_db), 
         )
     return blog
 
-@app.get("/author")
-def author():
-    return {
-        "data" : {
-            "first_name" : "Manabendu",
-            "last_name" : 'Karfa'
-        }
-    }
 
-@app.post('/user/create', response_model=UserResponse)
+@app.post('/user/create', response_model=UserResponse, tags=["users"])
 def create_user(userReq: UserRequest, db : Session = Depends(get_db)):
     user = User(
         email=userReq.email,
@@ -102,6 +90,16 @@ def create_user(userReq: UserRequest, db : Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+    return user
+
+@app.get("/user/get/{email}", response_model=UserResponse, tags=["users"])
+def get_user(email : str, db : Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail= f"user with email {email} not found"
+        )
     return user
 
 
