@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel
 
 class Blog(BaseModel):
@@ -5,15 +7,10 @@ class Blog(BaseModel):
     author: str
     body: str
     published: bool
+    user_email : str
 
     class Config:
         from_attributes = True
-
-class BlogResponse(BaseModel):
-    title: str
-    author: str
-    class Config:
-        from_attributes=True
 
 class UserRequest(BaseModel):
     email : str
@@ -25,5 +22,13 @@ class UserRequest(BaseModel):
 class UserResponse(BaseModel):
     email : str
     name : str
+    blogs : List[Blog] = []
     class Config:
         from_attributed=True
+
+class BlogResponse(BaseModel):
+    title: str
+    author: str
+    owner: UserResponse
+    class Config:
+        from_attributes=True

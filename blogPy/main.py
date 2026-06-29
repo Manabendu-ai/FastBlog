@@ -26,7 +26,8 @@ def create_blog(blog : Blog, db : Session = Depends(get_db)):
         title=blog.title,
         author= blog.author,
         body= blog.body,
-        published= blog.published
+        published= blog.published,
+        user_email=blog.user_email
     )
     db.add(new_blog)
     db.commit()
