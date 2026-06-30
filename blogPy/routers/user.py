@@ -6,9 +6,12 @@ from ..database import get_db
 from ..schemas import UserRequest, UserResponse
 from ..hashing import hashPassword
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/user",
+     tags=["users"]
+)
 
-@router.post('/user/create', response_model=UserResponse, tags=["users"])
+@router.post('/create', response_model=UserResponse)
 def create_user(userReq: UserRequest, db : Session = Depends(get_db)):
     user = User(
         email=userReq.email,
@@ -20,7 +23,7 @@ def create_user(userReq: UserRequest, db : Session = Depends(get_db)):
     db.refresh(user)
     return user
 
-@router.get("/user/get/{email}", response_model=UserResponse, tags=["users"])
+@router.get("/get/{email}", response_model=UserResponse)
 def get_user(email : str, db : Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
     if user is None:
